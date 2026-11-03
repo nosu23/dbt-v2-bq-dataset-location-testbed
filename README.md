@@ -1,9 +1,13 @@
 # BigQuery dataset location testbed for dbt v1 and v2
 
-This dbt project compares the BigQuery dataset location lookup used by `grants` in dbt Core v1, unpatched dbt v2, and patched dbt v2. All three use the same profile, macro, dataset, and impersonated service account.
+This dbt project reproduces a BigQuery dataset location permission error in dbt v2 and verifies a proposed fix. The same `grant_probe` model, profile, dataset, runner service account, and table-level `grants` configuration are used for each run.
 
-See [doc/verification.md](repro/doc/verification.md) for setup, commands, expected observations, and a PR evidence checklist. Expected observations are not test results; run the commands and record the actual output before citing them in a PR.
+| Build | Observed result |
+| --- | --- |
+| dbt Core 1.12.6 + dbt-bigquery 1.12.1 | Model succeeds; the grantee service account can read `id=42` |
+| Unpatched dbt v2.0.9 | Model fails with a 403 on project-wide `INFORMATION_SCHEMA.SCHEMATA` |
+| Patched dbt OSS v2.0.8 + patched BigQuery ADBC Go driver | Model succeeds; the grantee service account can read `id=42` |
 
-The main check uses `run-operation probe_grants_location`. It performs the location lookup and prints the SQL for checking table grants, without changing IAM. An optional `grant_probe` model exercises a real table-level grant.
+See [the verification guide](repro/doc/verification.md) for setup, commands, IAM reset steps, exact observations, and build details. The unpatched public release and the patched source build have different version numbers; record both when citing these results.
 
 Infrastructure for the isolated dataset and two test service accounts is in [repro/infra](repro/infra/README.md). Terraform commands are run manually.
