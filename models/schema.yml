@@ -1,0 +1,9 @@
+version: 2
+
+models:
+  - name: grant_probe
+    config:
+      materialized: table
+      grants:
+        roles/bigquery.dataViewer:
+          - "{{ env_var('DBT_GRANTEE') }}"

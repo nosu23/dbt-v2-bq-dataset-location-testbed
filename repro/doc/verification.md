@@ -28,9 +28,11 @@ export DBT_EXECUTION_PROJECT_ID="<execution-project-id>"
 export DBT_DATASET_ID="<existing-dataset-id>"
 export DBT_IMPERSONATE_SERVICE_ACCOUNT="<service-account-email>"
 export DBT_LOCATION="US"
+export DBT_GRANTEE="serviceAccount:<grantee-service-account-email>"
 ```
 
 The data project owns the dataset; the execution project runs BigQuery jobs. They may be the same project. `DBT_DATASET_ID` is the **existing dataset's exact name**; this project does not add a custom schema suffix.
+`models/schema.yml` reads `DBT_GRANTEE` while dbt parses the project, including for the location probe. The probe does not grant access to that principal.
 
 ## Compare the location lookup used by grants
 
@@ -75,7 +77,7 @@ Confirm that `ADBC_REPOSITORY` contains the patched `libadbc_driver_bigquery` sh
 
 The Terraform setup grants the runner dataset WRITER (Data Editor) and a dataset-scoped custom role containing only `bigquery.tables.setIamPolicy`. This lets the same runner perform both the location probe and the optional real table grant test.
 
-`models/grant_probe.sql` creates a table and grants `roles/bigquery.dataViewer` **on that table** to `DBT_GRANTEE`. Set a valid principal such as `user:someone@example.com` or `serviceAccount:account@project.iam.gserviceaccount.com`:
+`models/grant_probe.sql` creates the table. Its `grants` configuration is in `models/schema.yml` and assigns `roles/bigquery.dataViewer` **on that table** to `DBT_GRANTEE`. Use a valid principal such as `user:someone@example.com` or `serviceAccount:account@project.iam.gserviceaccount.com`:
 
 ```sh
 export DBT_GRANTEE="<principal>"
@@ -83,7 +85,7 @@ export DBT_GRANTEE="<principal>"
 "$DBT_BIN" run --profiles-dir profiles --select grant_probe
 ```
 
-Run this separately with each dbt build only if the impersonated service account can update the table IAM policy. The first run creates the table; the second run can compare existing grants and call `get_dataset_location`. These runs execute BigQuery jobs and change table IAM. Dataset `WRITER` alone is insufficient for the grant; the custom role supplies the missing permission. If `DBT_GRANTEE` is empty, the model has no grants; use the probe above for the location comparison.
+Run this separately with each dbt build only if the impersonated service account can update the table IAM policy. The first run creates the table; the second run can compare existing grants and call `get_dataset_location`. These runs execute BigQuery jobs and change table IAM. Dataset `WRITER` alone is insufficient for the grant; the custom role supplies the missing permission.
 
 A successful probe proves the **location lookup** works. A successful model run with `DBT_GRANTEE` also checks the **end-to-end grant workflow**.
 

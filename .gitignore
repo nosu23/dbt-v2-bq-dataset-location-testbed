@@ -1,0 +1,13 @@
+target/
+logs/
+dbt_packages/
+dbt_internal_packages/
+.env
+.idea/
+profiles/.user.yml
+
+repro/infra/.terraform/
+repro/infra/terraform.tfvars
+repro/infra/*.tfstate
+repro/infra/*.tfstate.*
+repro/infra/crash.log
