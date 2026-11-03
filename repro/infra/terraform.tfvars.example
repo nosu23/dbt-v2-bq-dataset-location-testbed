@@ -1,0 +1,4 @@
+data_project_id      = "your-data-project"
+execution_project_id = "your-execution-project"
+impersonator_member  = "user:you@example.com"
+location             = "US"
